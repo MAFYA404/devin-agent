@@ -6,6 +6,7 @@ interface ShellSession {
   output: string[];
   isRunning: boolean;
   cwd: string;
+  queue: Promise<unknown>;
 }
 
 class ShellManager extends EventEmitter {
@@ -27,6 +28,7 @@ class ShellManager extends EventEmitter {
       output: [],
       isRunning: true,
       cwd,
+      queue: Promise.resolve(),
     };
 
     proc.stdout?.on("data", (data: Buffer) => {
@@ -55,12 +57,24 @@ class ShellManager extends EventEmitter {
     command: string,
     timeout: number = 30000
   ): Promise<{ output: string; exitCode: number | null }> {
-    const session = this.sessions.get(id);
+    let session = this.sessions.get(id);
     if (!session || !session.isRunning) {
       this.createSession(id);
-      return this.executeCommand(id, command, timeout);
+      session = this.sessions.get(id)!;
     }
 
+    const run = session.queue.then(() =>
+      this.runCommand(session!, command, timeout)
+    );
+    session.queue = run.catch(() => undefined);
+    return run;
+  }
+
+  private runCommand(
+    session: ShellSession,
+    command: string,
+    timeout: number
+  ): Promise<{ output: string; exitCode: number | null }> {
     return new Promise((resolve) => {
       const marker = `__EXIT_CODE_${Date.now()}__`;
       const outputChunks: string[] = [];
