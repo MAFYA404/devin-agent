@@ -72,15 +72,18 @@ export default function ChatPanel() {
       const decoder = new TextDecoder();
       let assistantContent = "";
       const currentToolCalls = new Map<string, ToolCallDisplay>();
+      let buffer = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value, { stream: true });
-        const lines = chunk.split("\n");
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split("\n\n");
+        buffer = events.pop() || "";
 
-        for (const line of lines) {
+        for (const event of events) {
+          const line = event.trim();
           if (!line.startsWith("data: ")) continue;
           const data = JSON.parse(line.slice(6));
 

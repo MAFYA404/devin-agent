@@ -106,7 +106,7 @@ async function executeEditFile(
     };
   }
 
-  const newContent = content.replace(oldString, newString);
+  const newContent = content.replace(oldString, () => newString);
   await writeFile(filePath, newContent);
   return { success: true, output: `File edited: ${filePath}` };
 }

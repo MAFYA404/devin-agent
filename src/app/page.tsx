@@ -18,14 +18,9 @@ export default function Home() {
 
   const checkApiKey = async () => {
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [{ role: "user", content: "test" }],
-        }),
-      });
-      if (res.ok) {
+      const res = await fetch("/api/config");
+      const data = await res.json();
+      if (data.configured) {
         setApiKeySet(true);
       } else {
         setApiKeySet(false);

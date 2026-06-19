@@ -16,9 +16,9 @@ class ShellManager extends EventEmitter {
       return id;
     }
 
-    const proc = spawn("bash", ["-i"], {
+    const proc = spawn("bash", [], {
       cwd,
-      env: { ...process.env, TERM: "xterm-256color" },
+      env: { ...process.env, TERM: "dumb" },
       stdio: ["pipe", "pipe", "pipe"],
     });
 
@@ -83,9 +83,15 @@ class ShellManager extends EventEmitter {
           const filteredLines = lines.filter(
             (line) => !line.includes(wrappedCmd) && !line.includes(marker)
           );
+          const cleanOutput = filteredLines
+            .join("\n")
+            .replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "")
+            .replace(/\x1b\][^\x07]*\x07/g, "")
+            .replace(/\x1b\[\?[0-9;]*[a-zA-Z]/g, "")
+            .trim();
           resolved = true;
           resolve({
-            output: filteredLines.join("\n").trim(),
+            output: cleanOutput,
             exitCode,
           });
         }

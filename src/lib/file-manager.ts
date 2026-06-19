@@ -143,11 +143,12 @@ export async function searchFilenames(
         const fullPath = path.join(dir, entry.name);
         if (entry.isDirectory()) {
           await searchDir(fullPath);
-        }
-        for (const pattern of patterns) {
-          if (matchesGlob(entry.name, pattern)) {
-            results.push(fullPath);
-            break;
+        } else {
+          for (const pattern of patterns) {
+            if (matchesGlob(entry.name, pattern)) {
+              results.push(fullPath);
+              break;
+            }
           }
         }
       }
